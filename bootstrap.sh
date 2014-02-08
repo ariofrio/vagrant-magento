@@ -79,7 +79,7 @@ install-ngrok() {
 				WHERE path='admin/url/use_custom' OR path='admin/url/custom';
 			exit
 		EOMYSQL
-		rm -rf /vagrant/magento/var
+		rm -rf /vagrant/magento/var/cache
 	end script
 
 	script
