@@ -59,7 +59,7 @@ install-ngrok() {
 		fi
 
 		cat > /vagrant/ngrok_subdomain.txt <<-EOF
-		# Change this file and run `vagrant reload` to use a different ngrok subdomain
+		# Change this file and run \`vagrant reload\` to use a different ngrok subdomain
 		# and update the base URL in Magento to reflect this. Lines starting with are
 		# ignored.
 
