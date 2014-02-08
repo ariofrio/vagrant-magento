@@ -3,6 +3,7 @@
 
 Vagrant.configure(2) do |config|
   config.vm.box = "precise64"
+  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
   config.vm.provision :shell, path: "bootstrap.sh", args: [ENV['SUBDOMAIN'] || ""]
   # config.vm.network :forwarded_port, guest: 4040, guest_ip: "127.0.0.1", host: 4040
 
