@@ -3,7 +3,12 @@
 
 Vagrant.configure(2) do |config|
   config.vm.box = "precise64"
-  config.vm.provision :shell, :path => "bootstrap.sh", :args => [ENV['SUBDOMAIN']]
+  config.vm.provision :shell, path: "bootstrap.sh", args: [ENV['SUBDOMAIN'] || ""]
+  # config.vm.network :forwarded_port, guest: 4040, guest_ip: "127.0.0.1", host: 4040
+
+  if Vagrant.has_plugin?("vagrant-cachier")
+    config.cache.auto_detect = true
+  end
 
   # The url from where the 'config.vm.box' box will be fetched if it
   # doesn't already exist on the user's system.
