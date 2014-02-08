@@ -118,6 +118,7 @@ install-magento() {
 
 configure-magento() {
 	subdomain=$(sed '/^\s*#/d' /vagrant/ngrok_subdomain.txt)
+	subdomain=$(echo $subdomain)
 	mysql -uroot -proot <<-EOMYSQL
 		CREATE DATABASE magento;
 		GRANT ALL ON magento.* TO 'magento'@'localhost' IDENTIFIED BY 'magento';
@@ -148,6 +149,7 @@ configure-magento() {
 
 print-urls() {
 	subdomain=$(sed '/^\s*#/d' /vagrant/ngrok_subdomain.txt)
+	subdomain=$(echo $subdomain)
 	echo "Done. Your website is ready."
 	echo "Frontend: http://$subdomain.ngrok.com/magento"
 	echo "Backend: http://$subdomain.ngrok.com/magento/admin"
