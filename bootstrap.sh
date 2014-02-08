@@ -77,7 +77,7 @@ install-ngrok() {
 		mysql -uroot -proot -Dmagento <<-EOMYSQL
 			UPDATE core_config_data
 				SET value='http://\$subdomain.ngrok.com/magento/'
-				WHERE path='/web/unsecure/base_url' OR path='web/secure/base_url';
+				WHERE path='web/unsecure/base_url' OR path='web/secure/base_url';
 			DELETE FROM core_config_data
 				WHERE path='admin/url/use_custom' OR path='admin/url/custom';
 			exit
