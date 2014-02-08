@@ -1,12 +1,6 @@
 #!/bin/bash
 set -ex
 
-if [ -z "$1" ]; then
-	SUBDOMAIN=$(date | md5sum | head -c8)
-else
-	SUBDOMAIN=$1
-fi
-
 main() {
 	apt-get update -y
 
@@ -58,6 +52,12 @@ install-ngrok() {
 	rm ngrok.zip
 
 	if [ ! -f /vagrant/ngrok_subdomain.txt ]; then
+		if [ -z "$1" ]; then
+			SUBDOMAIN=$(date | md5sum | head -c8)
+		else
+			SUBDOMAIN=$1
+		fi
+
 		cat > /vagrant/ngrok_subdomain.txt <<-EOF
 		# Change this file and run `vagrant reload` to use a different ngrok subdomain
 		# and update the base URL in Magento to reflect this. Lines starting with are
@@ -99,15 +99,8 @@ install-magento() {
 	service apache2 stop
 	if [ ! -d /vagrant/magento ]; then
 		cd /vagrant
-		wget http://www.magentocommerce.com/downloads/assets/1.8.1.0/magento-1.8.1.0.tar.bz2
-		tar -xf magento-1.8.1.0.tar.bz2 --checkpoint=.1000
-		rm magento-1.8.1.0.tar.bz2
-		cd magento
-
 		apt-get install -y git
-		git init .
-		git add .
-		git commit -m "Initial import"
+		git clone https://github.com/ariofrio/magento.git
 	fi
 
 	a2enmod rewrite
@@ -124,6 +117,7 @@ install-magento() {
 }
 
 configure-magento() {
+	subdomain=$(sed '/^\s*#/d' /vagrant/ngrok_subdomain.txt)
 	mysql -uroot -proot <<-EOMYSQL
 		CREATE DATABASE magento;
 		GRANT ALL ON magento.* TO 'magento'@'localhost' IDENTIFIED BY 'magento';
@@ -139,10 +133,10 @@ configure-magento() {
 	    --db_name "magento" \
 	    --db_user "magento" \
 	    --db_pass "magento" \
-	    --url "http://$SUBDOMAIN.ngrok.com/magento" \
+	    --url "http://$subdomain.ngrok.com/magento" \
 	    --use_rewrites "yes" \
 	    --use_secure "no" \
-	    --secure_base_url "http://$SUBDOMAIN.ngrok.com/magento" \
+	    --secure_base_url "http://$subdomain.ngrok.com/magento" \
 	    --use_secure_admin "no" \
 	    --skip_url_validation "no" \
 	    --admin_firstname "Store" \
