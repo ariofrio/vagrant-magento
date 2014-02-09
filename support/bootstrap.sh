@@ -1,6 +1,8 @@
 #!/bin/bash
 set -ex
 
+SUPPLIED_SUBDOMAIN="$1"
+
 main() {
 	apt-get update -y
 
@@ -58,29 +60,32 @@ install-ngrok() {
 	mv ngrok /usr/local/bin
 	rm ngrok.zip
 
+	# Migrate previous setups.
 	if [ ! -f /vagrant/config/ngrok_subdomain.txt ]; then
 		if [ -f /vagrant/ngrok_subdomain.txt ]; then
-			# Migrate previous setups.
 			mkdir -p /vagrant/config
 			mv /vagrant/ngrok_subdomain.txt /vagrant/config/
-		else
-			# Create the configuration file.
-			if [ -z "$1" ]; then
-				SUBDOMAIN=$(date | md5sum | head -c8)
-			else
-				SUBDOMAIN=$1
-			fi
-
-			mkdir -p /vagrant/config
-			cat /vagrant/config/ngrok_subdomain.txt <<-EOF
-			# Change this file and run \`vagrant reload\` to use a different
-			# ngrok subdomain and update the base URL in Magento to reflect
-			# this. Empty lines and lines starting with # are ignored.
-
-			$SUBDOMAIN
-			EOF
 		fi
 	fi
+
+	# Create the configuration file.
+	if [ -n "$SUPPLIED_SUBDOMAIN" ] || [ ! -f /vagrant/config/ngrok_subdomain.txt ]; then
+		if [ -z "$SUPPLIED_SUBDOMAIN" ]; then
+			SUBDOMAIN=$(date | md5sum | head -c8)
+		else
+			SUBDOMAIN="$SUPPLIED_SUBDOMAIN"
+		fi
+
+		mkdir -p /vagrant/config
+		cat > /vagrant/config/ngrok_subdomain.txt <<-EOF
+		# Change this file and run \`vagrant reload\` to use a different
+		# ngrok subdomain and update the base URL in Magento to reflect
+		# this. Empty lines and lines starting with # are ignored.
+
+		$SUBDOMAIN
+		EOF
+	fi
+
 	# Make sure the file is easily editable on Windows.
 	unix2dos /vagrant/config/ngrok_subdomain.txt
 
