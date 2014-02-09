@@ -4,6 +4,7 @@ set -ex
 main() {
 	apt-get update -y
 
+	install-subdomain
 	install-apache
 	install-php
 	install-mysql
@@ -16,6 +17,12 @@ main() {
 	service ngrok start
 
 	print-urls
+}
+
+install-subdomain() {
+	apt-get install -y dos2unix
+	dos2unix < /vagrant/support/subdomain.sh > /usr/local/bin/subdomain
+	chmod +x /usr/local/bin/subdomain
 }
 
 install-apache() {
@@ -51,47 +58,33 @@ install-ngrok() {
 	mv ngrok /usr/local/bin
 	rm ngrok.zip
 
-	if [ ! -f /vagrant/ngrok_subdomain.txt ]; then
-		if [ -z "$1" ]; then
-			SUBDOMAIN=$(date | md5sum | head -c8)
+	if [ ! -f /vagrant/config/ngrok_subdomain.txt ]; then
+		if [ -f /vagrant/ngrok_subdomain.txt ]; then
+			# Migrate previous setups.
+			mkdir -p /vagrant/config
+			mv /vagrant/ngrok_subdomain.txt /vagrant/config/
 		else
-			SUBDOMAIN=$1
+			# Create the configuration file.
+			if [ -z "$1" ]; then
+				SUBDOMAIN=$(date | md5sum | head -c8)
+			else
+				SUBDOMAIN=$1
+			fi
+
+			mkdir -p /vagrant/config
+			cat /vagrant/config/ngrok_subdomain.txt <<-EOF
+			# Change this file and run \`vagrant reload\` to use a different
+			# ngrok subdomain and update the base URL in Magento to reflect
+			# this. Empty lines and lines starting with # are ignored.
+
+			$SUBDOMAIN
+			EOF
 		fi
-
-		cat > /vagrant/ngrok_subdomain.txt <<-EOF
-		# Change this file and run \`vagrant reload\` to use a different ngrok subdomain
-		# and update the base URL in Magento to reflect this. Lines starting with are
-		# ignored.
-
-		$SUBDOMAIN
-		EOF
 	fi
+	# Make sure the file is easily editable on Windows.
+	unix2dos /vagrant/config/ngrok_subdomain.txt
 
-	cat > /etc/init/ngrok.conf <<-EOF
-	start on (vagrant-mounted and started mysql and net-device-up IFACE!=lo)
-	respawn
-
-	pre-start script
-		subdomain=\$(sed '/^\s*#/d' /vagrant/ngrok_subdomain.txt)
-		subdomain=\$(echo \$subdomain)
-		mysql -uroot -proot -Dmagento <<-EOMYSQL
-			UPDATE core_config_data
-				SET value='http://\$subdomain.ngrok.com/magento/'
-				WHERE path='web/unsecure/base_url' OR path='web/secure/base_url';
-			DELETE FROM core_config_data
-				WHERE path='admin/url/use_custom' OR path='admin/url/custom';
-			exit
-		EOMYSQL
-		rm -rf /vagrant/magento/var/cache
-	end script
-
-	script
-		subdomain=\$(sed '/^\s*#/d' /vagrant/ngrok_subdomain.txt)
-		subdomain=\$(echo \$subdomain)
-		ngrok -authtoken _dVbEk8--SnQSJS-Un7q -subdomain \$subdomain 80
-	end script
-	EOF
-
+	dos2unix < /vagrant/support/ngrok.conf > /etc/init/ngrok.conf
 	# Do not start ngrok just yet because the Magento database is not setup.
 }
 
@@ -117,8 +110,6 @@ install-magento() {
 }
 
 configure-magento() {
-	subdomain=$(sed '/^\s*#/d' /vagrant/ngrok_subdomain.txt)
-	subdomain=$(echo $subdomain)
 	mysql -uroot -proot <<-EOMYSQL
 		CREATE DATABASE magento;
 		GRANT ALL ON magento.* TO 'magento'@'localhost' IDENTIFIED BY 'magento';
@@ -134,10 +125,10 @@ configure-magento() {
 	    --db_name "magento" \
 	    --db_user "magento" \
 	    --db_pass "magento" \
-	    --url "http://$subdomain.ngrok.com/magento" \
+	    --url "http://$(subdomain).ngrok.com/magento" \
 	    --use_rewrites "yes" \
 	    --use_secure "no" \
-	    --secure_base_url "http://$subdomain.ngrok.com/magento" \
+	    --secure_base_url "http://$(subdomain).ngrok.com/magento" \
 	    --use_secure_admin "no" \
 	    --skip_url_validation "no" \
 	    --admin_firstname "Store" \
@@ -148,11 +139,9 @@ configure-magento() {
 }
 
 print-urls() {
-	subdomain=$(sed '/^\s*#/d' /vagrant/ngrok_subdomain.txt)
-	subdomain=$(echo $subdomain)
 	echo "Done. Your website is ready."
-	echo "Frontend: http://$subdomain.ngrok.com/magento"
-	echo "Backend: http://$subdomain.ngrok.com/magento/admin"
+	echo "Frontend: http://$(subdomain).ngrok.com/magento"
+	echo "Backend: http://$(subdomain).ngrok.com/magento/admin"
 }
 
 main

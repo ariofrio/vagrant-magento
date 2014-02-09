@@ -1,3 +1,4 @@
 /magento
 /.vagrant
-/ngrok_subdomain.txt
+/config/ngrok_subdomain.txt
+*.sublime-*
