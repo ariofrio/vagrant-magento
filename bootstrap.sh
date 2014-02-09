@@ -23,7 +23,7 @@ install-apache() {
 }
 
 install-php() {
-	apt-get install -y libapache2-mod-php5 php5-cli
+	apt-get install -y libapache2-mod-php5 php5-cli php5-curl
 	a2enmod php5
 	service apache2 restart
 }
