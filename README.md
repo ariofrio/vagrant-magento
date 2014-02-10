@@ -12,7 +12,7 @@
 
         git clone https://github.com/ariofrio/vagrant-magento.git
 
- 5. Provision the virtual machine (this will take 15-20 minutes the first time). Don't forget to replace `MYNAME` with the subdomain you want.
+ 5. Provision the virtual machine (First time users see NOTE below). Don't forget to replace `MYNAME` with the subdomain you want.
 
     Run this on Linux or Mac OS X:
 
@@ -30,7 +30,8 @@
 
         cd vagrant-magento
         cmd /c "set SUBDOMAIN=MYNAME && vagrant up"
-
+	
+	NOTE:: This will take 15-20 minutes the first time. The default Box 'precise64' will be downloaded from the following URL: "http://files.vagrantup.com/precise64.box". Don't panic! This is supposed to happen :]
 # Usage
 
 ## Magento
