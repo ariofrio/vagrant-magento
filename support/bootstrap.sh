@@ -17,6 +17,9 @@ main() {
 	install-magento
 	configure-magento
 
+	# Make the magento folder more easily accessible
+	sudo -u vagrant ln -s /vagrant/magento /home/vagrant/
+
 	service apache2 restart
 	service ngrok start
 
