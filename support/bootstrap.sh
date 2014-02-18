@@ -6,6 +6,7 @@ SUPPLIED_SUBDOMAIN="$1"
 main() {
 	apt-get update -y
 
+	apt-get install -y vim
 	install-subdomain
 	install-apache
 	install-php
